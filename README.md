@@ -2,6 +2,8 @@
 
 A fast comic book viewer for Windows, inspired by CDisplayEx. Native C++20, WinUI 3 (Windows App SDK), Direct2D.
 
+![ComicsDisplayExp showing a two-page spread, with the page navigation and view toggles in the title bar](docs/screenshot.jpg)
+
 ## Formats
 
 - Archives: CBZ/ZIP, CBR/RAR (RAR4 and RAR5), CB7/7z, CBT/tar (via libarchive)
@@ -98,3 +100,10 @@ The setup ([installer/ComicsDisplayExp.iss](installer/ComicsDisplayExp.iss), Inn
 | `Settings.*` | INI persistence (defaults, window, recent files) |
 | `ReadingHistory.*` | Per-comic state (page, fit, zoom, …) with automatic expiry |
 | `MainWindow.*` | WinUI window, input, file dialog, drag and drop, fullscreen |
+| `FileAssociations.*` | Per-user file type registration (default viewer, "Open with") |
+
+## Credits
+
+ComicsDisplayExp is written by Fabian Korak, co-authored with [Claude](https://www.anthropic.com/claude) (Claude Opus 5.5, Anthropic) using [Claude Code](https://claude.com/claude-code). Claude wrote most of the code and tests under Fabian's direction; design decisions, review and testing on real comics are Fabian's.
+
+The screenshot shows generated sample pages, not a real comic.
