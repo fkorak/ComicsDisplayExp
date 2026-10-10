@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PkgDir>$(MSBuildThisFileDirectory)..\packages\</PkgDir>
+    <PkgCppWinRT>$(PkgDir)Microsoft.Windows.CppWinRT.3.0.260818.1\</PkgCppWinRT>
+    <PkgWil>$(PkgDir)Microsoft.Windows.ImplementationLibrary.1.0.260126.7\</PkgWil>
+    <PkgWebView2>$(PkgDir)Microsoft.Web.WebView2.1.0.3719.77\</PkgWebView2>
+    <PkgSdkBuildTools>$(PkgDir)Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\</PkgSdkBuildTools>
+    <PkgSdkBuildToolsMsix>$(PkgDir)Microsoft.Windows.SDK.BuildTools.MSIX.1.7.251221100\</PkgSdkBuildToolsMsix>
+    <PkgWasBase>$(PkgDir)Microsoft.WindowsAppSDK.Base.2.0.4\</PkgWasBase>
+    <PkgWasFoundation>$(PkgDir)Microsoft.WindowsAppSDK.Foundation.2.3.12\</PkgWasFoundation>
+    <PkgWasInteractive>$(PkgDir)Microsoft.WindowsAppSDK.InteractiveExperiences.2.1.9\</PkgWasInteractive>
+    <PkgWasRuntime>$(PkgDir)Microsoft.WindowsAppSDK.Runtime.2.5.1\</PkgWasRuntime>
+    <PkgWasWinUI>$(PkgDir)Microsoft.WindowsAppSDK.WinUI.2.3.9\</PkgWasWinUI>
+  </PropertyGroup>
+  <Import Project="$(PkgCppWinRT)build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(PkgCppWinRT)build\native\Microsoft.Windows.CppWinRT.props')" />
+  <Import Project="$(PkgSdkBuildTools)build\Microsoft.Windows.SDK.BuildTools.props" Condition="Exists('$(PkgSdkBuildTools)build\Microsoft.Windows.SDK.BuildTools.props')" />
+  <Import Project="$(PkgSdkBuildToolsMsix)build\Microsoft.Windows.SDK.BuildTools.MSIX.props" Condition="Exists('$(PkgSdkBuildToolsMsix)build\Microsoft.Windows.SDK.BuildTools.MSIX.props')" />
+  <Import Project="$(PkgWasBase)build\native\Microsoft.WindowsAppSDK.Base.props" Condition="Exists('$(PkgWasBase)build\native\Microsoft.WindowsAppSDK.Base.props')" />
+  <Import Project="$(PkgWasInteractive)build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.props" Condition="Exists('$(PkgWasInteractive)build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.props')" />
+  <Import Project="$(PkgWasFoundation)build\native\Microsoft.WindowsAppSDK.Foundation.props" Condition="Exists('$(PkgWasFoundation)build\native\Microsoft.WindowsAppSDK.Foundation.props')" />
+  <Import Project="$(PkgWasWinUI)build\native\Microsoft.WindowsAppSDK.WinUI.props" Condition="Exists('$(PkgWasWinUI)build\native\Microsoft.WindowsAppSDK.WinUI.props')" />
+  <Import Project="$(PkgWasRuntime)build\native\Microsoft.WindowsAppSDK.Runtime.props" Condition="Exists('$(PkgWasRuntime)build\native\Microsoft.WindowsAppSDK.Runtime.props')" />
+  <PropertyGroup Label="Globals">
+    <CppWinRTOptimized>true</CppWinRTOptimized>
+    <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
+    <MinimalCoreWin>true</MinimalCoreWin>
+    <ProjectGuid>{A5F3FDFF-6CBF-45D8-BFCC-1B1887E91F38}</ProjectGuid>
+    <ProjectName>ComicsDisplayExp</ProjectName>
+    <RootNamespace>ComicsDisplayExp</RootNamespace>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
+    <AppContainerApplication>false</AppContainerApplication>
+    <AppxPackage>false</AppxPackage>
+    <ApplicationType>Windows Store</ApplicationType>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- vcpkg (manifest mode, static libs + dynamic CRT) provides libarchive -->
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <!-- vcpkg bundled with Visual Studio, else a standalone one from VCPKG_ROOT (GitHub runners). -->
+    <VcpkgMsbuildDir Condition="'$(VcpkgMsbuildDir)'=='' and Exists('$(VsInstallRoot)\VC\vcpkg\scripts\buildsystems\msbuild\vcpkg.props')">$(VsInstallRoot)\VC\vcpkg\scripts\buildsystems\msbuild\</VcpkgMsbuildDir>
+    <VcpkgMsbuildDir Condition="'$(VcpkgMsbuildDir)'=='' and '$(VCPKG_ROOT)'!=''">$(VCPKG_ROOT)\scripts\buildsystems\msbuild\</VcpkgMsbuildDir>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static-md</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='ARM64'">arm64-windows-static-md</VcpkgTriplet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <!-- Newest installed toolset: v145 with VS 2026, v143 with VS 2022 (e.g. GitHub runners). -->
+    <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VcpkgMsbuildDir)vcpkg.props" Condition="Exists('$(VcpkgMsbuildDir)vcpkg.props') and '$(VcpkgPropsImported)'!='true'" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
+      <WarningLevel>Level4</WarningLevel>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <PreprocessorDefinitions>LIBARCHIVE_STATIC;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>%(AdditionalOptions) /bigobj /utf-8</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>d3d11.lib;dxgi.lib;d2d1.lib;dxguid.lib;windowscodecs.lib;shlwapi.lib;shell32.lib;ole32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Manifest Include="app.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="App.xaml.h">
+      <DependentUpon>App.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MainWindow.xaml.h">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="ComicSource.h" />
+    <ClInclude Include="FileAssociations.h" />
+    <ClInclude Include="GraphicsDevice.h" />
+    <ClInclude Include="PageLoader.h" />
+    <ClInclude Include="ReadingHistory.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Settings.h" />
+    <ClInclude Include="Viewer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml" />
+    <Page Include="MainWindow.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="App.xaml.cpp">
+      <DependentUpon>App.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MainWindow.xaml.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="ComicSource.cpp" />
+    <ClCompile Include="FileAssociations.cpp" />
+    <ClCompile Include="GraphicsDevice.cpp" />
+    <ClCompile Include="PageLoader.cpp" />
+    <ClCompile Include="ReadingHistory.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Settings.cpp" />
+    <ClCompile Include="Viewer.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MainWindow.idl">
+      <SubType>Code</SubType>
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="vcpkg.json" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="$(VcpkgMsbuildDir)vcpkg.targets" Condition="Exists('$(VcpkgMsbuildDir)vcpkg.targets') and '$(VcpkgPropsImported)'=='true'" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(PkgWil)build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('$(PkgWil)build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+    <Import Project="$(PkgWebView2)build\native\Microsoft.Web.WebView2.targets" Condition="Exists('$(PkgWebView2)build\native\Microsoft.Web.WebView2.targets')" />
+    <Import Project="$(PkgCppWinRT)build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('$(PkgCppWinRT)build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="$(PkgSdkBuildTools)build\Microsoft.Windows.SDK.BuildTools.targets" Condition="Exists('$(PkgSdkBuildTools)build\Microsoft.Windows.SDK.BuildTools.targets')" />
+    <Import Project="$(PkgSdkBuildToolsMsix)build\Microsoft.Windows.SDK.BuildTools.MSIX.targets" Condition="Exists('$(PkgSdkBuildToolsMsix)build\Microsoft.Windows.SDK.BuildTools.MSIX.targets')" />
+    <Import Project="$(PkgWasBase)build\native\Microsoft.WindowsAppSDK.Base.targets" Condition="Exists('$(PkgWasBase)build\native\Microsoft.WindowsAppSDK.Base.targets')" />
+    <Import Project="$(PkgWasInteractive)build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.targets" Condition="Exists('$(PkgWasInteractive)build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.targets')" />
+    <Import Project="$(PkgWasFoundation)build\native\Microsoft.WindowsAppSDK.Foundation.targets" Condition="Exists('$(PkgWasFoundation)build\native\Microsoft.WindowsAppSDK.Foundation.targets')" />
+    <Import Project="$(PkgWasWinUI)build\native\Microsoft.WindowsAppSDK.WinUI.targets" Condition="Exists('$(PkgWasWinUI)build\native\Microsoft.WindowsAppSDK.WinUI.targets')" />
+    <Import Project="$(PkgWasRuntime)build\native\Microsoft.WindowsAppSDK.Runtime.targets" Condition="Exists('$(PkgWasRuntime)build\native\Microsoft.WindowsAppSDK.Runtime.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Restore them first (msbuild -t:restore -p:RestorePackagesConfig=true). The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(PkgCppWinRT)build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '$(PkgCppWinRT)build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('$(PkgWasWinUI)build\native\Microsoft.WindowsAppSDK.WinUI.props')" Text="$([System.String]::Format('$(ErrorText)', '$(PkgWasWinUI)build\native\Microsoft.WindowsAppSDK.WinUI.props'))" />
+    <Error Condition="!Exists('$(PkgWasFoundation)build\native\Microsoft.WindowsAppSDK.Foundation.props')" Text="$([System.String]::Format('$(ErrorText)', '$(PkgWasFoundation)build\native\Microsoft.WindowsAppSDK.Foundation.props'))" />
+  </Target>
+</Project>

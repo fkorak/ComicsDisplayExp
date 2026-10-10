@@ -1,0 +1,137 @@
+name: Build
+
+# Builds the viewer on every push and pull request and publishes the ready-to-run,
+# self-contained app folder and a Windows installer as downloadable artifacts.
+# Pushing a tag like v1.2.0 also attaches the installer and a zip to a GitHub release.
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ x64, ARM64 ]
+    # ARM64 is cross-compiled and not yet verified on real hardware; it must not fail the run.
+    continue-on-error: ${{ matrix.platform == 'ARM64' }}
+    env:
+      CONFIGURATION: Release
+      # vcpkg's binary cache, persisted between runs by actions/cache below.
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\.vcpkg-cache
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Use the runner's vcpkg if Visual Studio has none bundled
+        run: |
+          New-Item -ItemType Directory -Force "$env:VCPKG_DEFAULT_BINARY_CACHE" | Out-Null
+          if ($env:VCPKG_INSTALLATION_ROOT) { "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV }
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: packages
+          key: nuget-${{ hashFiles('ComicsDisplayExp/packages.config') }}
+
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: .vcpkg-cache
+          key: vcpkg-${{ matrix.platform }}-${{ hashFiles('ComicsDisplayExp/vcpkg.json') }}
+          restore-keys: vcpkg-${{ matrix.platform }}-
+
+      - name: Restore NuGet packages
+        run: msbuild ComicsDisplayExp.sln -t:restore -p:RestorePackagesConfig=true -p:Configuration=$env:CONFIGURATION -p:Platform=${{ matrix.platform }} -v:minimal -nologo
+
+      # vcpkg installs libarchive (and its compression libraries) as part of the build.
+      - name: Build
+        run: msbuild ComicsDisplayExp.sln -m -p:Configuration=$env:CONFIGURATION -p:Platform=${{ matrix.platform }} -v:minimal -nologo
+
+      - name: Collect app
+        id: collect
+        run: |
+          $out = "${{ matrix.platform }}\$env:CONFIGURATION\ComicsDisplayExp"
+          if (-not (Test-Path "$out\ComicsDisplayExp.exe")) { throw "Build output not found in $out" }
+          $name = "ComicsDisplayExp-${{ matrix.platform }}-$("${{ github.sha }}".Substring(0, 7))"
+          New-Item -ItemType Directory -Force "dist\$name" | Out-Null
+          Copy-Item "$out\*" "dist\$name" -Recurse -Exclude *.pdb,*.lib,*.exp
+          Compress-Archive -Path "dist\$name\*" -DestinationPath "dist\$name.zip"
+          "name=$name" >> $env:GITHUB_OUTPUT
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.collect.outputs.name }}
+          path: dist/${{ steps.collect.outputs.name }}/
+          if-no-files-found: error
+
+      # Same script as a local build: installer\build-setup.ps1 (the build above is reused).
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer
+        id: setup
+        run: |
+          $version = if ('${{ github.ref_type }}' -eq 'tag') { '${{ github.ref_name }}'.TrimStart('v') } else { '0.1.0-ci.${{ github.run_number }}' }
+          ./installer/build-setup.ps1 -Platform ${{ matrix.platform }} -Version $version -SkipBuild
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ComicsDisplayExp-Setup-${{ matrix.platform }}-${{ github.run_number }}
+          path: ${{ steps.setup.outputs.setup }}
+          if-no-files-found: error
+
+      - name: Upload debug symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.collect.outputs.name }}-pdb
+          path: ${{ matrix.platform }}/${{ env.CONFIGURATION }}/ComicsDisplayExp/*.pdb
+          if-no-files-found: ignore
+
+      - name: Keep zip and installer for release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          path: |
+            dist/${{ steps.collect.outputs.name }}.zip
+            ${{ steps.setup.outputs.setup }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download zips and installers
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: release
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/*.exe
+            release/*.zip
+          generate_release_notes: true

@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="ComicsDisplayExp.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="ComicsDisplayExp">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop Kind="BaseAlt" />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="Root"
+          AllowDrop="True"
+          DragOver="OnDragOver"
+          Drop="OnDrop"
+          PreviewKeyDown="OnPreviewKeyDown">
+
+        <Grid.Resources>
+            <ResourceDictionary>
+            <!-- App colours per theme (Light / Dark). Everything else uses WinUI's own theme
+                 brushes, so the whole window follows Root.RequestedTheme (☰ → Theme). -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="ViewerBackgroundBrush" Color="#FF0F0F0F" />
+                    <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#B0000000" />
+                    <SolidColorBrush x:Key="OverlayForegroundBrush" Color="#FFE0E0E0" />
+                    <SolidColorBrush x:Key="MessageBackgroundBrush" Color="#E8262626" />
+                    <SolidColorBrush x:Key="HelpCardBackgroundBrush" Color="#FF1C1C1C" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="ViewerBackgroundBrush" Color="#FFE8E8E8" />
+                    <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#D8FFFFFF" />
+                    <SolidColorBrush x:Key="OverlayForegroundBrush" Color="#FF1F1F1F" />
+                    <SolidColorBrush x:Key="MessageBackgroundBrush" Color="#F0FBFBFB" />
+                    <SolidColorBrush x:Key="HelpCardBackgroundBrush" Color="#FFFBFBFB" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!-- Compact, borderless buttons for the title bar. They never take
+                 keyboard focus, so reading keys keep going to the page. -->
+            <Style x:Key="BarButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="10,6" />
+                <Setter Property="MinHeight" Value="32" />
+                <Setter Property="AllowFocusOnInteraction" Value="False" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style x:Key="BarToggleStyle" TargetType="ToggleButton" BasedOn="{StaticResource DefaultToggleButtonStyle}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="10,6" />
+                <Setter Property="MinHeight" Value="32" />
+                <Setter Property="AllowFocusOnInteraction" Value="False" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            </ResourceDictionary>
+        </Grid.Resources>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ============================================================ viewer -->
+        <Grid x:Name="ViewerArea" Grid.Row="1" Background="{ThemeResource ViewerBackgroundBrush}">
+
+            <!-- Focusable host so the window always receives keyboard input. -->
+            <ContentControl x:Name="InputHost"
+                            IsTabStop="True"
+                            UseSystemFocusVisuals="False"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch">
+                <SwapChainPanel x:Name="Panel"
+                                SizeChanged="OnPanelSizeChanged"
+                                CompositionScaleChanged="OnCompositionScaleChanged"
+                                PointerPressed="OnPointerPressed"
+                                PointerMoved="OnPointerMoved"
+                                PointerReleased="OnPointerReleased"
+                                PointerCaptureLost="OnPointerCaptureLost"
+                                PointerWheelChanged="OnPointerWheelChanged" />
+            </ContentControl>
+
+            <StackPanel x:Name="WelcomePanel"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="10">
+                <FontIcon Glyph="&#xE8F1;" FontSize="56" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                <TextBlock Text="ComicsDisplayExp" FontSize="30" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                <TextBlock Text="Drop a comic here, or open one to start reading." HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,10,0,6">
+                    <Button Style="{StaticResource AccentButtonStyle}" Tag="open" Click="OnCommand" AllowFocusOnInteraction="False">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE8E5;" FontSize="16" />
+                            <TextBlock Text="Open file" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="openFolder" Click="OnCommand" AllowFocusOnInteraction="False">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE838;" FontSize="16" />
+                            <TextBlock Text="Open folder" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <TextBlock Text="CBZ · CBR · CB7 · CBT · ZIP · RAR · 7Z · image folders" HorizontalAlignment="Center" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <TextBlock Text="Press F1 for keyboard shortcuts" HorizontalAlignment="Center" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <HyperlinkButton x:Name="DefaultViewerLink" Content="Make ComicsDisplayExp your default comic viewer" Tag="assocDefault" Click="OnCommand" HorizontalAlignment="Center" FontSize="12" Visibility="Collapsed" AllowFocusOnInteraction="False" />
+            </StackPanel>
+
+            <Border x:Name="InfoBar"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Margin="12"
+                    Padding="10,4"
+                    CornerRadius="4"
+                    Background="{ThemeResource OverlayBackgroundBrush}"
+                    Visibility="Collapsed"
+                    IsHitTestVisible="False">
+                <TextBlock x:Name="InfoText" FontSize="12" Foreground="{ThemeResource OverlayForegroundBrush}" />
+            </Border>
+
+            <Border x:Name="MessageBar"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Margin="16,24,16,0"
+                    Padding="14,8"
+                    CornerRadius="6"
+                    Background="{ThemeResource MessageBackgroundBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    Visibility="Collapsed"
+                    IsHitTestVisible="False">
+                <TextBlock x:Name="MessageText" TextWrapping="Wrap" MaxWidth="640" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+            </Border>
+
+            <!-- Shortcut help: a dimmed backdrop (click it to close) around a card with a close button. -->
+            <Grid x:Name="HelpPanel"
+                  Background="{ThemeResource SmokeFillColorDefaultBrush}"
+                  Visibility="Collapsed"
+                  Tapped="OnHelpBackdropTapped">
+                <Border HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Margin="16"
+                        Padding="24,14,14,18"
+                        CornerRadius="8"
+                        Background="{ThemeResource HelpCardBackgroundBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        Tapped="OnHelpCardTapped">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Keyboard and mouse" FontSize="18" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Style="{StaticResource BarButtonStyle}" Tag="help" Click="OnCommand" ToolTipService.ToolTip="Close (Esc)">
+                                <FontIcon Glyph="&#xE711;" FontSize="12" />
+                            </Button>
+                        </Grid>
+                        <Grid ColumnSpacing="24" RowSpacing="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                                <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                                <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="→ / PgDn / mouse forward" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Next page" />
+                            <TextBlock Grid.Row="1" Text="← / PgUp / mouse back" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="Previous page" />
+                            <TextBlock Grid.Row="2" Text="Space / ↓ / wheel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="Scroll, then next page (Shift+Space / ↑ back)" />
+                            <TextBlock Grid.Row="3" Text="Home / End" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="First / last page" />
+                            <TextBlock Grid.Row="4" Text="Ctrl+→ / Ctrl+←  or  ] / [" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="Next / previous book in folder" />
+                            <TextBlock Grid.Row="5" Text="F  W  H  A" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="Fit page / width / height, actual size" />
+                            <TextBlock Grid.Row="6" Text="1 / 2" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="Single page / two-page spread" />
+                            <TextBlock Grid.Row="7" Text="C" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="7" Grid.Column="1" Text="Show cover alone in spread mode" />
+                            <TextBlock Grid.Row="8" Text="M" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="8" Grid.Column="1" Text="Manga mode (right to left)" />
+                            <TextBlock Grid.Row="9" Text="R / Shift+R" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="9" Grid.Column="1" Text="Rotate clockwise / counter-clockwise" />
+                            <TextBlock Grid.Row="10" Text="+ / − / 0 / Ctrl+wheel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="10" Grid.Column="1" Text="Zoom in / out / reset; drag to pan" />
+                            <TextBlock Grid.Row="11" Text="F11 / Enter / middle click" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="11" Grid.Column="1" Text="Fullscreen (top edge or F10 shows the menu bar)" />
+                            <TextBlock Grid.Row="12" Text="I · T" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="12" Grid.Column="1" Text="Toggle page info · cycle theme (system / light / dark)" />
+                            <TextBlock Grid.Row="13" Text="F10 · Ctrl+O / Ctrl+Shift+O" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="13" Grid.Column="1" Text="Menu · open file / open folder" />
+                            <TextBlock Grid.Row="14" Text="Esc" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="14" Grid.Column="1" Text="Leave fullscreen, close help, or quit" />
+                        </Grid>
+                        <TextBlock Text="Click outside or press Esc to close" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ========================================================= title bar -->
+        <!-- Declared after the viewer so it overlays the page when revealed in fullscreen. -->
+        <!-- Custom title bar. ExtendsContentIntoTitleBar + SetTitleBar make the whole row a
+             window-drag area; the buttons are registered as pass-through regions in code
+             (UpdateToolbarLayout), which also sizes CaptionColumn from the caption inset. -->
+        <Grid x:Name="AppTitleBar"
+              Grid.Row="0"
+              Height="48"
+              PointerExited="OnTitleBarPointerExited"
+              SizeChanged="OnTitleBarSizeChanged">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />                        <!-- hamburger -->
+                <ColumnDefinition Width="Auto" />                        <!-- app icon -->
+                <ColumnDefinition Width="*" />                           <!-- toolbar -->
+                <ColumnDefinition x:Name="CaptionColumn" Width="138" />  <!-- min / max / close -->
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="HamburgerButton"
+                    Style="{StaticResource BarButtonStyle}"
+                    Margin="4,0,0,0"
+                    ToolTipService.ToolTip="Menu (F10)">
+                <FontIcon Glyph="&#xE700;" FontSize="16" />
+                <Button.Flyout>
+                    <MenuFlyout x:Name="MainMenu" Placement="BottomEdgeAlignedLeft" Opening="OnMenuOpening" Closed="OnFlyoutClosed">
+                        <MenuFlyoutItem Text="Open file…" Tag="open" Click="OnCommand" KeyboardAcceleratorTextOverride="Ctrl+O">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8E5;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Open folder…" Tag="openFolder" Click="OnCommand" KeyboardAcceleratorTextOverride="Ctrl+Shift+O">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE838;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSubItem x:Name="RecentMenu" Text="Open recent">
+                            <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE81C;" /></MenuFlyoutSubItem.Icon>
+                        </MenuFlyoutSubItem>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem x:Name="NextBookItem" Text="Next comic in folder" Tag="nextBook" Click="OnCommand" KeyboardAcceleratorTextOverride="Ctrl+→">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE893;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="PrevBookItem" Text="Previous comic in folder" Tag="prevBook" Click="OnCommand" KeyboardAcceleratorTextOverride="Ctrl+←">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE892;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutSubItem Text="View">
+                            <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE9A6;" /></MenuFlyoutSubItem.Icon>
+                            <RadioMenuFlyoutItem x:Name="MenuFitPage" Text="Fit page" GroupName="MenuFit" Tag="fitPage" Click="OnCommand" KeyboardAcceleratorTextOverride="F" />
+                            <RadioMenuFlyoutItem x:Name="MenuFitWidth" Text="Fit width" GroupName="MenuFit" Tag="fitWidth" Click="OnCommand" KeyboardAcceleratorTextOverride="W" />
+                            <RadioMenuFlyoutItem x:Name="MenuFitHeight" Text="Fit height" GroupName="MenuFit" Tag="fitHeight" Click="OnCommand" KeyboardAcceleratorTextOverride="H" />
+                            <RadioMenuFlyoutItem x:Name="MenuFitActual" Text="Actual size" GroupName="MenuFit" Tag="fitActual" Click="OnCommand" KeyboardAcceleratorTextOverride="A" />
+                            <MenuFlyoutSeparator />
+                            <ToggleMenuFlyoutItem x:Name="MenuSpread" Text="Two-page spread" Tag="spread" Click="OnCommand" KeyboardAcceleratorTextOverride="2" />
+                            <ToggleMenuFlyoutItem x:Name="MenuCover" Text="Show cover alone" Tag="cover" Click="OnCommand" KeyboardAcceleratorTextOverride="C" />
+                            <ToggleMenuFlyoutItem x:Name="MenuManga" Text="Manga (right to left)" Tag="manga" Click="OnCommand" KeyboardAcceleratorTextOverride="M" />
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Text="Rotate right" Tag="rotateRight" Click="OnCommand" KeyboardAcceleratorTextOverride="R">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE7AD;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Text="Rotate left" Tag="rotateLeft" Click="OnCommand" KeyboardAcceleratorTextOverride="Shift+R" />
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Text="Zoom in" Tag="zoomIn" Click="OnCommand" KeyboardAcceleratorTextOverride="+">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8A3;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Text="Zoom out" Tag="zoomOut" Click="OnCommand" KeyboardAcceleratorTextOverride="−">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71F;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Text="Reset zoom" Tag="zoomReset" Click="OnCommand" KeyboardAcceleratorTextOverride="0" />
+                            <MenuFlyoutSeparator />
+                            <ToggleMenuFlyoutItem x:Name="MenuInfo" Text="Show page info" Tag="info" Click="OnCommand" KeyboardAcceleratorTextOverride="I" />
+                            <ToggleMenuFlyoutItem x:Name="MenuSmooth" Text="Smooth scrolling" Tag="smoothScroll" Click="OnCommand" />
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutSubItem Text="Sharpening">
+                                <RadioMenuFlyoutItem x:Name="MenuSharpenOff" Text="Off" GroupName="Sharpen" Tag="sharpen0" Click="OnCommand" />
+                                <RadioMenuFlyoutItem x:Name="MenuSharpenLight" Text="Light" GroupName="Sharpen" Tag="sharpen1" Click="OnCommand" />
+                                <RadioMenuFlyoutItem x:Name="MenuSharpenMedium" Text="Medium" GroupName="Sharpen" Tag="sharpen2" Click="OnCommand" />
+                                <RadioMenuFlyoutItem x:Name="MenuSharpenStrong" Text="Strong" GroupName="Sharpen" Tag="sharpen3" Click="OnCommand" />
+                            </MenuFlyoutSubItem>
+                            <ToggleMenuFlyoutItem x:Name="MenuEnlarge" Text="Enlarge small pages" Tag="enlarge" Click="OnCommand" />
+                        </MenuFlyoutSubItem>
+                        <MenuFlyoutItem x:Name="MenuFullscreen" Text="Fullscreen" Tag="fullscreen" Click="OnCommand" KeyboardAcceleratorTextOverride="F11">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE740;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutSubItem Text="Theme">
+                            <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE790;" /></MenuFlyoutSubItem.Icon>
+                            <RadioMenuFlyoutItem x:Name="MenuThemeSystem" Text="Use system setting" GroupName="Theme" Tag="theme0" Click="OnCommand" />
+                            <RadioMenuFlyoutItem x:Name="MenuThemeLight" Text="Light" GroupName="Theme" Tag="theme1" Click="OnCommand" />
+                            <RadioMenuFlyoutItem x:Name="MenuThemeDark" Text="Dark" GroupName="Theme" Tag="theme2" Click="OnCommand" />
+                        </MenuFlyoutSubItem>
+                        <MenuFlyoutSubItem Text="File associations">
+                            <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE8A5;" /></MenuFlyoutSubItem.Icon>
+                            <ToggleMenuFlyoutItem x:Name="MenuDefaultViewer" Text="Default viewer for comic books (CBZ, CBR, CB7, CBT)" Tag="assocDefault" Click="OnCommand" />
+                            <ToggleMenuFlyoutItem x:Name="MenuOpenWithArchives" Text="Show in “Open with” for ZIP, RAR and 7Z" Tag="assocArchives" Click="OnCommand" />
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Text="Remove all file associations" Tag="assocRemove" Click="OnCommand" />
+                        </MenuFlyoutSubItem>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem Text="Keyboard shortcuts" Tag="help" Click="OnCommand" KeyboardAcceleratorTextOverride="F1">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE765;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Exit" Tag="exit" Click="OnCommand" KeyboardAcceleratorTextOverride="Esc" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </Button>
+
+            <FontIcon Grid.Column="1" Glyph="&#xE8F1;" FontSize="16" Margin="8,0,6,0" VerticalAlignment="Center" IsHitTestVisible="False" />
+
+            <Grid x:Name="BarToolbar" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0" />    <!-- book name -->
+                    <ColumnDefinition Width="Auto" /> <!-- page navigation -->
+                    <ColumnDefinition Width="0" />    <!-- spacer -->
+                    <ColumnDefinition Width="Auto" /> <!-- view toggles -->
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="BookTitle"
+                           Grid.Column="0"
+                           Style="{StaticResource CaptionTextBlockStyle}"
+                           Margin="4,0,12,0"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           TextWrapping="NoWrap" />
+
+                <StackPanel x:Name="NavGroup" Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                    <Button x:Name="FirstButton" Style="{StaticResource BarButtonStyle}" Tag="firstPage" Click="OnCommand" ToolTipService.ToolTip="First page (Home)">
+                        <FontIcon Glyph="&#xE892;" FontSize="14" />
+                    </Button>
+                    <Button x:Name="PrevButton" Style="{StaticResource BarButtonStyle}" Tag="prevPage" Click="OnCommand" ToolTipService.ToolTip="Previous page (←)">
+                        <FontIcon Glyph="&#xE76B;" FontSize="14" />
+                    </Button>
+                    <Button x:Name="PageButton" Style="{StaticResource BarButtonStyle}" MinWidth="96" ToolTipService.ToolTip="Go to page">
+                        <TextBlock x:Name="PageText" Text="–" FontWeight="SemiBold" />
+                        <Button.Flyout>
+                            <Flyout x:Name="PageFlyout" Placement="Bottom" Opening="OnPageFlyoutOpening" Closed="OnFlyoutClosed">
+                                <StackPanel Width="340" Spacing="4">
+                                    <TextBlock x:Name="PageFlyoutTitle" Text="Go to page" FontWeight="SemiBold" />
+                                    <Slider x:Name="PageSlider" Minimum="1" Maximum="1" StepFrequency="1" SmallChange="1" ValueChanged="OnPageSliderChanged" />
+                                    <TextBlock x:Name="PageFlyoutName" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                    <Button x:Name="NextButton" Style="{StaticResource BarButtonStyle}" Tag="nextPage" Click="OnCommand" ToolTipService.ToolTip="Next page (→)">
+                        <FontIcon Glyph="&#xE76C;" FontSize="14" />
+                    </Button>
+                    <Button x:Name="LastButton" Style="{StaticResource BarButtonStyle}" Tag="lastPage" Click="OnCommand" ToolTipService.ToolTip="Last page (End)">
+                        <FontIcon Glyph="&#xE893;" FontSize="14" />
+                    </Button>
+                </StackPanel>
+
+                <StackPanel x:Name="ViewGroup" Grid.Column="3" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                    <Button x:Name="FitButton" Style="{StaticResource BarButtonStyle}" ToolTipService.ToolTip="Fit mode">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE9A6;" FontSize="14" />
+                            <FontIcon Glyph="&#xE70D;" FontSize="9" />
+                        </StackPanel>
+                        <Button.Flyout>
+                            <MenuFlyout x:Name="FitMenu" Placement="BottomEdgeAlignedRight" Opening="OnMenuOpening" Closed="OnFlyoutClosed">
+                                <RadioMenuFlyoutItem x:Name="BarFitPage" Text="Fit page" GroupName="BarFit" Tag="fitPage" Click="OnCommand" KeyboardAcceleratorTextOverride="F" />
+                                <RadioMenuFlyoutItem x:Name="BarFitWidth" Text="Fit width" GroupName="BarFit" Tag="fitWidth" Click="OnCommand" KeyboardAcceleratorTextOverride="W" />
+                                <RadioMenuFlyoutItem x:Name="BarFitHeight" Text="Fit height" GroupName="BarFit" Tag="fitHeight" Click="OnCommand" KeyboardAcceleratorTextOverride="H" />
+                                <RadioMenuFlyoutItem x:Name="BarFitActual" Text="Actual size" GroupName="BarFit" Tag="fitActual" Click="OnCommand" KeyboardAcceleratorTextOverride="A" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                    <ToggleButton x:Name="SpreadToggle" Style="{StaticResource BarToggleStyle}" Tag="spread" Click="OnCommand" ToolTipService.ToolTip="Two-page spread (2)">
+                        <FontIcon Glyph="&#xE736;" FontSize="14" />
+                    </ToggleButton>
+                    <ToggleButton x:Name="MangaToggle" Style="{StaticResource BarToggleStyle}" Tag="manga" Click="OnCommand" ToolTipService.ToolTip="Manga, right to left (M)">
+                        <FontIcon Glyph="&#xE8AB;" FontSize="14" />
+                    </ToggleButton>
+                    <Button x:Name="FullscreenButton" Style="{StaticResource BarButtonStyle}" Tag="fullscreen" Click="OnCommand" ToolTipService.ToolTip="Fullscreen (F11)">
+                        <FontIcon x:Name="FullscreenGlyph" Glyph="&#xE740;" FontSize="14" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
