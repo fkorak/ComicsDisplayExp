@@ -2,6 +2,9 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <PkgDir>$(MSBuildThisFileDirectory)..\packages\</PkgDir>
+    <!-- App version (X.Y.Z) from the VERSION file at the repository root; see Version.h. -->
+    <CdxVersion>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\VERSION').Trim())</CdxVersion>
+    <CdxVersionCommas>$(CdxVersion.Replace('.', ',')),0</CdxVersionCommas>
     <PkgCppWinRT>$(PkgDir)Microsoft.Windows.CppWinRT.3.0.260818.1\</PkgCppWinRT>
     <PkgWil>$(PkgDir)Microsoft.Windows.ImplementationLibrary.1.0.260126.7\</PkgWil>
     <PkgWebView2>$(PkgDir)Microsoft.Web.WebView2.1.0.3719.77\</PkgWebView2>
@@ -98,9 +101,12 @@
       <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
       <WarningLevel>Level4</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <PreprocessorDefinitions>LIBARCHIVE_STATIC;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LIBARCHIVE_STATIC;NOMINMAX;CDX_VERSION=$(CdxVersion);CDX_VERSION_COMMAS=$(CdxVersionCommas);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>%(AdditionalOptions) /bigobj /utf-8</AdditionalOptions>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>CDX_VERSION=$(CdxVersion);CDX_VERSION_COMMAS=$(CdxVersionCommas);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>d3d11.lib;dxgi.lib;d2d1.lib;dxguid.lib;windowscodecs.lib;shlwapi.lib;shell32.lib;ole32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -125,6 +131,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Manifest Include="app.manifest" />
+    <ResourceCompile Include="ComicsDisplayExp.rc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -142,6 +149,7 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Viewer.h" />
+    <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml" />

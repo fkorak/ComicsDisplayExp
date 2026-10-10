@@ -82,11 +82,22 @@ The app is unpackaged and self-contained: `x64\Release\ComicsDisplayExp\` contai
 .\installer\build-setup.ps1 -Platform ARM64 -Version 1.2.0
 ```
 
-The setup ([installer/ComicsDisplayExp.iss](installer/ComicsDisplayExp.iss), Inno Setup 6) installs per user without admin rights by default, adds a Start menu entry, and offers to make the app the default comic viewer or add it to "Open with" for ZIP/RAR/7Z. Running a newer setup upgrades in place; uninstalling also removes the file associations. The version defaults to the newest `vX.Y.Z` git tag.
+The setup ([installer/ComicsDisplayExp.iss](installer/ComicsDisplayExp.iss), Inno Setup 6) installs per user without admin rights by default, adds a Start menu entry, and offers to make the app the default comic viewer or add it to "Open with" for ZIP/RAR/7Z. Running a newer setup upgrades in place; uninstalling also removes the file associations.
 
 ### Continuous builds
 
-[.github/workflows/build.yml](.github/workflows/build.yml) builds every push to `main` and every pull request on GitHub's Windows runners (x64; ARM64 as an experimental extra), using the same `build-setup.ps1` for the installer. Each run attaches the ready-to-run app folder and the setup as artifacts. Pushing a tag such as `v0.2.0` also creates a GitHub release with the setup and a zip.
+[.github/workflows/build.yml](.github/workflows/build.yml) builds every push to `main` and every pull request on GitHub's Windows runners (x64; ARM64 as an experimental extra), using the same `build-setup.ps1` for the installer. Each run attaches the ready-to-run app folder and the setup as artifacts.
+
+### Releasing
+
+The version lives in the [VERSION](VERSION) file (currently 0.1.0). It is compiled into the exe, shown on the shortcuts card (F1) and used for the installer. To release, set `VERSION`, commit, and push a matching tag:
+
+```powershell
+git tag 0.1.0
+git push origin 0.1.0
+```
+
+The workflow then publishes a GitHub release with the installer and a zip. A tag that doesn't match `VERSION` fails instead of publishing a mislabeled build.
 
 ## Source layout
 

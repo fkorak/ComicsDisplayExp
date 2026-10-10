@@ -19,7 +19,7 @@ param(
     [ValidateSet('x64', 'ARM64')]
     [string]$Platform = 'x64',
 
-    # Defaults to the newest git tag like v1.2.3, else 0.1.0.
+    # Defaults to the VERSION file at the repository root.
     [string]$Version,
 
     # Package an existing build instead of building (the CI builds in an earlier step).
@@ -34,12 +34,8 @@ $root = Split-Path $PSScriptRoot -Parent
 
 # ---------------------------------------------------------------- version
 if (-not $Version) {
-    # Newest version tag; listing (unlike `git describe`) is silent when there are none.
-    $tag = $null
-    if (Get-Command git -ErrorAction SilentlyContinue) {
-        $tag = git -C $root tag --list 'v[0-9]*' --sort=-version:refname | Select-Object -First 1
-    }
-    $Version = if ($tag) { $tag.TrimStart('v') } else { '0.1.0' }
+    # The single source of truth, also compiled into the exe (see ComicsDisplayExp\Version.h).
+    $Version = (Get-Content (Join-Path $root 'VERSION') -Raw).Trim()
 }
 # Windows file versions are four numbers: 1.2.3-beta -> 1.2.3.0
 $numbers = @(($Version -replace '[^0-9.].*$', '').Split('.') | Where-Object { $_ -ne '' } | Select-Object -First 4)

@@ -201,7 +201,7 @@
                             <TextBlock Grid.Row="14" Text="Esc" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             <TextBlock Grid.Row="14" Grid.Column="1" Text="Leave fullscreen, close help, or quit" />
                         </Grid>
-                        <TextBlock Text="Click outside or press Esc to close" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                        <TextBlock x:Name="HelpFooter" Text="Click outside or press Esc to close" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" Margin="0,4,0,0" />
                     </StackPanel>
                 </Border>
             </Grid>

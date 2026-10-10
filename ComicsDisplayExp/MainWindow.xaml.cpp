@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 #include "FileAssociations.h"
+#include "Version.h"
 #if __has_include("MainWindow.g.cpp")
 #include "MainWindow.g.cpp"
 #endif
@@ -56,6 +57,8 @@ namespace winrt::ComicsDisplayExp::implementation
         m_renderer = std::make_unique<cdx::Renderer>(m_device);
         m_renderer->Attach(Panel());
         m_renderer->SetSharpening(static_cast<cdx::Sharpening>(m_settings.sharpening));
+
+        HelpFooter().Text(std::format(L"ComicsDisplayExp {}  ·  Click outside or press Esc to close", CDX_VERSION_WSTRING));
 
         // Per-comic reading state; loading also drops entries untouched for months.
         // Keep file associations pointing at this exe, wherever it lives now.
@@ -848,13 +851,12 @@ namespace winrt::ComicsDisplayExp::implementation
         }
         else
         {
-            // A small bump before wheel page turns: when scrolling reaches the edge of a
-            // page it rests there briefly before the wheel can turn it, so the page end
-            // is noticeable without stopping a continuous scroll. Without anything to
-            // scroll, one notch turns the page, with a short cooldown against skipping.
+            // Pages that fit the window turn on every notch, with no delay. Scrollable pages
+            // (zoomed in, or taller than the window) get a small bump instead: when scrolling
+            // reaches their edge they rest there briefly before the wheel turns them, so the
+            // page end is noticeable without stopping a continuous scroll.
             using namespace std::chrono_literals;
-            constexpr auto kEdgeHold = 200ms;     // rest at the edge after scrolling into it
-            constexpr auto kTurnCooldown = 150ms; // minimum time between wheel page turns
+            constexpr auto kEdgeHold = 200ms; // rest at the edge after scrolling into it
             auto now = std::chrono::steady_clock::now();
 
             if (m_viewer->ScrollBy(0, -delta / 120.0f * m_renderer->PixelHeight() * 0.2f, true))
@@ -864,7 +866,7 @@ namespace winrt::ComicsDisplayExp::implementation
             }
             else if (now < m_wheelBlockedUntil)
             {
-                m_wheelAccumulator = 0; // resting at the edge (or just turned)
+                m_wheelAccumulator = 0; // resting at the edge of a scrolled page
             }
             else
             {
@@ -883,7 +885,7 @@ namespace winrt::ComicsDisplayExp::implementation
                 if (turned)
                 {
                     m_wheelAccumulator = 0;
-                    m_wheelBlockedUntil = now + kTurnCooldown;
+                    m_wheelBlockedUntil = {}; // the new page starts unblocked
                 }
             }
         }
