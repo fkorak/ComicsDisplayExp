@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <PkgDir>$(MSBuildThisFileDirectory)..\packages\</PkgDir>
@@ -132,6 +132,10 @@
   <ItemGroup>
     <Manifest Include="app.manifest" />
     <ResourceCompile Include="ComicsDisplayExp.rc" />
+    <!-- Shown inside the app (title bar, welcome screen) via ms-appx:///Assets/AppIcon.png. -->
+    <Image Include="Assets\AppIcon.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -150,6 +154,7 @@
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Viewer.h" />
     <ClInclude Include="Version.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml" />
@@ -184,6 +189,9 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="vcpkg.json" />
+    <None Include="Assets\make-icons.ps1" />
+    <None Include="Assets\AppIcon.ico" />
+    <None Include="Assets\ComicFile.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(VcpkgMsbuildDir)vcpkg.targets" Condition="Exists('$(VcpkgMsbuildDir)vcpkg.targets') and '$(VcpkgPropsImported)'=='true'" />

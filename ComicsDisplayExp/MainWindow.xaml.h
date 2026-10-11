@@ -49,6 +49,7 @@ namespace winrt::ComicsDisplayExp::implementation
         void SetTitleBarRevealed(bool revealed);
         void ShowMainMenu();
         void ApplyTheme();
+        void ApplyWindowIcon();
         void UpdateThemeColors();
         void UpdateDefaultViewerLink();
         void UpdateToolbarLayout();

@@ -48,6 +48,9 @@ OutputBaseFilename={#AppName}-Setup-{#AppVersion}-{#Platform}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
+; Icons are drawn by ComicsDisplayExp\Assets\make-icons.ps1.
+SetupIconFile=..\ComicsDisplayExp\Assets\AppIcon.ico
+WizardSmallImageFile=WizardSmall-55.bmp,WizardSmall-64.bmp,WizardSmall-69.bmp,WizardSmall-83.bmp,WizardSmall-92.bmp,WizardSmall-110.bmp,WizardSmall-119.bmp,WizardSmall-138.bmp
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}
 ; Close a running viewer before replacing its files (upgrades).

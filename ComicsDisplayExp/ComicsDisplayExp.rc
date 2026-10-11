@@ -1,6 +1,11 @@
-// Version information shown in the exe's file properties.
+// Icons and version information of the exe.
 #include <winver.h>
 #include "Version.h"
+#include "resource.h"
+
+IDI_APP ICON "Assets/AppIcon.ico"
+IDI_COMIC_FILE ICON "Assets/ComicFile.ico"
+
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION CDX_VERSION_COMMAS

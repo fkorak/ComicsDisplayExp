@@ -3,6 +3,8 @@
 
 #include <ShlObj.h>
 
+#include "resource.h"
+
 namespace cdx::FileAssociations
 {
     namespace
@@ -35,6 +37,9 @@ namespace cdx::FileAssociations
         }
 
         std::wstring OpenCommand() { return L"\"" + ExePath() + L"\" \"%1\""; }
+
+        // Comic-file icon embedded in the exe (negative index = resource ID, see resource.h).
+        std::wstring FileIcon() { return L"\"" + ExePath() + L"\",-" + std::to_wstring(IDI_COMIC_FILE); }
 
         void SetString(std::wstring const& subKey, const wchar_t* name, std::wstring const& value)
         {
@@ -83,7 +88,7 @@ namespace cdx::FileAssociations
             std::wstring key = std::wstring(kClasses) + progId;
             SetString(key, nullptr, typeName);
             SetString(key, L"FriendlyTypeName", typeName);
-            SetString(key + L"\\DefaultIcon", nullptr, L"\"" + ExePath() + L"\",0");
+            SetString(key + L"\\DefaultIcon", nullptr, FileIcon());
             SetString(key + L"\\shell", nullptr, L"open");
             SetString(key + L"\\shell\\open", L"FriendlyAppName", kAppName);
             SetString(key + L"\\shell\\open\\command", nullptr, OpenCommand());
@@ -234,8 +239,10 @@ namespace cdx::FileAssociations
         if (!comics && !archives) return;
 
         std::wstring command = OpenCommand();
-        auto current = GetString(std::wstring(kClasses) + (comics ? kComicProgId : kArchiveProgId) + L"\\shell\\open\\command", nullptr);
-        if (current == command) return; // up to date: nothing to write
+        std::wstring progIdKey = std::wstring(kClasses) + (comics ? kComicProgId : kArchiveProgId);
+        bool upToDate = GetString(progIdKey + L"\\shell\\open\\command", nullptr) == command &&
+                        GetString(progIdKey + L"\\DefaultIcon", nullptr) == FileIcon();
+        if (upToDate) return; // nothing to write
 
         if (comics) WriteProgId(kComicProgId, L"Comic book");
         if (archives) WriteProgId(kArchiveProgId, L"Archive");

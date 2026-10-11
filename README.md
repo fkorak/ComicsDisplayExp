@@ -112,6 +112,7 @@ The workflow then publishes a GitHub release with the installer and a zip. A tag
 | `ReadingHistory.*` | Per-comic state (page, fit, zoom, …) with automatic expiry |
 | `MainWindow.*` | WinUI window, input, file dialog, drag and drop, fullscreen |
 | `FileAssociations.*` | Per-user file type registration (default viewer, "Open with") |
+| `Assets/` | App and comic-file icons, drawn by `make-icons.ps1` (rerun it after changing the design; it also writes the installer's wizard images) |
 
 ## Credits
 

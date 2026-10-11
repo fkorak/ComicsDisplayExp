@@ -2,6 +2,7 @@
 #include "MainWindow.xaml.h"
 #include "FileAssociations.h"
 #include "Version.h"
+#include "resource.h"
 #if __has_include("MainWindow.g.cpp")
 #include "MainWindow.g.cpp"
 #endif
@@ -89,6 +90,7 @@ namespace winrt::ComicsDisplayExp::implementation
         Root().ActualThemeChanged([this](auto&&, auto&&) { UpdateThemeColors(); });
         ApplyTheme();
         AppWindow().TitleBar().PreferredHeightOption(TitleBarHeightOption::Tall);
+        ApplyWindowIcon();
         RestoreWindowPlacement();
 
         Activated([this](auto&&, WindowActivatedEventArgs const& args) {
@@ -303,6 +305,22 @@ namespace winrt::ComicsDisplayExp::implementation
         }
         auto source = Microsoft::UI::Input::InputNonClientPointerSource::GetForWindowId(AppWindow().Id());
         source.SetRegionRects(Microsoft::UI::Input::NonClientRegionKind::Passthrough, rects);
+    }
+
+    void MainWindow::ApplyWindowIcon()
+    {
+        // Taskbar and Alt+Tab icons from the exe's embedded icon, loaded at the sizes this
+        // monitor's DPI asks for so they stay crisp. (The title bar draws its own icon.)
+        HWND hwnd = nullptr;
+        if (FAILED(this->try_as<::IWindowNative>()->get_WindowHandle(&hwnd)) || !hwnd) return;
+        UINT dpi = GetDpiForWindow(hwnd);
+        HINSTANCE module = GetModuleHandleW(nullptr);
+        auto load = [&](int metric) {
+            int size = GetSystemMetricsForDpi(metric, dpi);
+            return static_cast<HICON>(LoadImageW(module, MAKEINTRESOURCEW(IDI_APP), IMAGE_ICON, size, size, LR_SHARED));
+        };
+        if (HICON bigIcon = load(SM_CXICON)) SendMessageW(hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(bigIcon));
+        if (HICON smallIcon = load(SM_CXSMICON)) SendMessageW(hwnd, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(smallIcon));
     }
 
     void MainWindow::ApplyTheme()
